@@ -1,3 +1,6 @@
 pytest
 scikit-learn
 fastapi[all]
+typing
+streamlit
+tabulate
