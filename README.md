@@ -59,6 +59,11 @@ To use the API, you can make HTTP requests to the appropriate endpoints using to
 
 [Ndumbe Moses N.]
 
+![API 1](https://github.com/user-attachments/assets/771e56b1-5fd7-42b5-b23f-d3949b5479a6)
+![API 2](https://github.com/user-attachments/assets/9668f641-6da0-4e5d-b21f-dd93157b2295)
+![API 3](https://github.com/user-attachments/assets/53c77cdb-5ced-4720-abd9-a9ab09ea81ca)
+![API 4](https://github.com/user-attachments/assets/bf9188bc-b586-4438-b00b-3997e6eb6fb0)
+
 ## App Link
 
 (http://127.0.0.1:8000/docs#/)
