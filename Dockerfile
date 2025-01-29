@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
 
 ARG PYTHON_VERSION=3.12.7
-FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS windows_base  # Windows base image
+FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS windows_base 
 
-FROM python:${PYTHON_VERSION}-slim-windowsservercore-ltsc2022 AS base # Python on Windows
+FROM python:${PYTHON_VERSION}-slim-windowsservercore-ltsc2022 AS base
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
