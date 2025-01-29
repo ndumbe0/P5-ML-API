@@ -1,6 +1,10 @@
 pytest
-scikit-learn
 fastapi[all]
 typing
 streamlit
 tabulate
+pandas
+scikit-learn
+fastapi
+uvicorn
+joblib
