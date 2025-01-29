@@ -61,7 +61,7 @@ To use the API, you can make HTTP requests to the appropriate endpoints using to
 
 ## App Link
 
-(http://127.0.0.1:8000/docs#/)]
+(http://127.0.0.1:8000/docs#/)
 
 ## Conclusion
 
