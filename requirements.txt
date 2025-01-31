@@ -4,6 +4,14 @@ typing
 streamlit
 tabulate
 pandas
+numpy
+matplotlib
+plotly
+seaborn
+tk
+Flask
+pyodbc 
+python-dotenv
 scikit-learn
 fastapi
 uvicorn
