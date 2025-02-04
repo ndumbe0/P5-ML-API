@@ -3,12 +3,23 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import joblib
 from io import StringIO
 import socket
+import os
+
+# Initialize data directory
+DATA_DIR = "data"
+os.makedirs(DATA_DIR, exist_ok=True)
 
 # Load and preprocess data
+try:
+    uploaded_data = pd.read_csv(os.path.join(DATA_DIR, "Paitients_Files_Train.csv"))
+except FileNotFoundError:
+    uploaded_data = None
+
 data = pd.read_csv("F:\\school\\Azubi Africa\\P5-ML-API\\data\\Paitients_Files_Train.csv")
 X = data.drop(['ID', 'Sepssis', 'Insurance'], axis=1)
 y = data['Sepssis']
@@ -44,14 +55,29 @@ class PatientData(BaseModel):
     BD2: float
     Age: int
 
-uploaded_data = None
-
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
     global uploaded_data
     contents = await file.read()
+    
+    # Save file to persistent storage
+    file_path = os.path.join(DATA_DIR, file.filename)
+    with open(file_path, "wb") as f:
+        f.write(contents)
+    
     uploaded_data = pd.read_csv(StringIO(str(contents, 'utf-8')))
-    return {"message": "File uploaded successfully"}
+    return {"message": f"File {file.filename} uploaded and saved successfully"}
+
+@app.get("/files")
+async def list_uploaded_files():
+    return {"files": os.listdir(DATA_DIR)}
+
+@app.get("/download/{filename}")
+async def download_file(filename: str):
+    file_path = os.path.join(DATA_DIR, filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(file_path, filename=filename)
 
 @app.get("/patient/{patient_id}")
 async def get_patient_data(patient_id: str):
@@ -109,4 +135,3 @@ if __name__ == "__main__":
         reload=True,
         server_header=False
     )
-
