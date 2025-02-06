@@ -6,6 +6,9 @@ import joblib
 import numpy as np
 from tempfile import NamedTemporaryFile
 import os
+import webbrowser
+import uvicorn
+import threading
 
 app = FastAPI()
 
@@ -16,8 +19,8 @@ SCALER_PATH = os.path.join(os.getcwd(), "scaler.joblib")
 if not os.path.exists(MODEL_PATH) or not os.path.exists(SCALER_PATH):
     raise FileNotFoundError("Model or scaler file not found. Please ensure they exist in the working directory.")
 
-model = joblib.load('sepsis_model.joblib')
-scaler = joblib.load('scaler.joblib')
+model = joblib.load(MODEL_PATH)
+scaler = joblib.load(SCALER_PATH)
 
 # Store uploaded data globally
 uploaded_data = None
@@ -93,3 +96,16 @@ async def read_root():
         </body>
     </html>
     """
+
+def open_browser():
+    # Open the browser after a short delay to ensure the server is running
+    import time
+    time.sleep(2)
+    webbrowser.open("http://127.0.0.1:8000/docs")
+
+if __name__ == "__main__":
+    # Start the browser in a separate thread
+    threading.Thread(target=open_browser).start()
+    
+    # Run the FastAPI app
+    uvicorn.run(app, host="127.0.0.1", port=8000)
