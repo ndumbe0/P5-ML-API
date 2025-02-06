@@ -2,13 +2,15 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
+# Copy all necessary files
+COPY . .
+
 # Copy training script first
 COPY train_model.py .
 COPY Paitients_Files_Train.csv .
 
 # Install dependencies and train model first
 RUN pip install pandas scikit-learn imbalanced-learn joblib
-RUN python train_model.py
 
 # Now copy app files
 COPY requirements.txt .

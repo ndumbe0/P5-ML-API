@@ -10,6 +10,12 @@ import os
 app = FastAPI()
 
 # Load model and scaler
+MODEL_PATH = os.path.join(os.getcwd(), "sepsis_model.joblib")
+SCALER_PATH = os.path.join(os.getcwd(), "scaler.joblib")
+
+if not os.path.exists(MODEL_PATH) or not os.path.exists(SCALER_PATH):
+    raise FileNotFoundError("Model or scaler file not found. Please ensure they exist in the working directory.")
+
 model = joblib.load('sepsis_model.joblib')
 scaler = joblib.load('scaler.joblib')
 
