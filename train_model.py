@@ -6,7 +6,7 @@ from imblearn.over_sampling import SMOTE
 from joblib import dump
 
 # Load data
-train_data = pd.read_csv("Paitients_Files_Train.csv")
+train_data = pd.read_csv("F:\\school\\Azubi Africa\\P5-ML-API\\data\\Paitients_Files_Train.csv")
 
 # Preprocess
 # Fix column name typo and encode target
