@@ -1,84 +1,89 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
-from fastapi.responses import FileResponse
-import joblib
-import pandas as pd
-import os
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+import pandas as pd
+import joblib
 import numpy as np
-
-# Initialize data directory
-DATA_DIR = "data"
-os.makedirs(DATA_DIR, exist_ok=True)
-
-# Load artifacts once at startup
-try:
-    model = joblib.load('sepsis_model.joblib')
-    scaler = joblib.load('scaler.joblib')
-    feature_columns = joblib.load('feature_columns.joblib')
-except FileNotFoundError:
-    raise RuntimeError("Model artifacts not found. Train model first!")
+from tempfile import NamedTemporaryFile
+import os
 
 app = FastAPI()
 
-class PatientData(BaseModel):
-    ID: str
-    PRG: float
-    PL: float
-    PR: float
-    SK: float
-    TS: float
-    M11: float
-    BD2: float
-    Age: int
+# Load model and scaler
+model = joblib.load('sepsis_model.joblib')
+scaler = joblib.load('scaler.joblib')
 
-@app.post("/upload")
+# Store uploaded data globally
+uploaded_data = None
+
+class PatientID(BaseModel):
+    patient_id: str
+
+@app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
-    contents = await file.read()
-    file_path = os.path.join(DATA_DIR, file.filename)
-    with open(file_path, "wb") as f:
-        f.write(contents)
-    return {"message": f"File {file.filename} uploaded successfully"}
-
-@app.get("/patient/{patient_id}")
-async def get_patient_data(patient_id: str):
+    global uploaded_data
     try:
-        uploaded_data = pd.read_csv(os.path.join(DATA_DIR, "Paitients_Files_Train.csv"))
-    except FileNotFoundError:
-        raise HTTPException(status_code=400, detail="No data file found")
+        # Save uploaded file temporarily
+        suffix = '.csv' if file.filename.endswith('.csv') else '.xlsx'
+        with NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            content = await file.read()
+            tmp.write(content)
+            tmp_path = tmp.name
+        
+        # Read file
+        if suffix == '.csv':
+            df = pd.read_csv(tmp_path)
+        else:
+            df = pd.read_excel(tmp_path)
+        
+        os.unlink(tmp_path)  # Delete temp file
+        
+        uploaded_data = df
+        return {"message": "File uploaded successfully", "patient_count": len(df)}
     
-    patient = uploaded_data[uploaded_data['ID'] == patient_id]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/patient_ids/")
+async def get_patient_ids():
+    if uploaded_data is None:
+        raise HTTPException(status_code=400, detail="Upload a file first")
+    return {"patient_ids": uploaded_data['ID'].tolist()}
+
+@app.post("/predict/")
+async def predict_sepsis(patient_id: PatientID):
+    global uploaded_data
+    if uploaded_data is None:
+        raise HTTPException(status_code=400, detail="Upload a file first")
+    
+    patient = uploaded_data[uploaded_data['ID'] == patient_id.patient_id]
     if patient.empty:
         raise HTTPException(status_code=404, detail="Patient not found")
     
-    return patient.iloc[0].to_dict()
-
-@app.post("/predict/{patient_id}")
-async def predict_sepsis(patient_id: str):
-    try:
-        uploaded_data = pd.read_csv(os.path.join(DATA_DIR, "Paitients_Files_Train.csv"))
-    except FileNotFoundError:
-        raise HTTPException(status_code=400, detail="No data file found")
+    # Preprocess
+    features = patient.drop(['ID'], axis=1)
+    features = features.fillna(features.median())
+    scaled_features = scaler.transform(features)
     
-    patient = uploaded_data[uploaded_data['ID'] == patient_id]
-    if patient.empty:
-        raise HTTPException(status_code=404, detail="Patient not found")
-    
-    input_data = patient.drop(['ID', 'Sepssis', 'Insurance'], axis=1)
-    input_data = pd.get_dummies(input_data)
-    
-    # Ensure all training features are present
-    for col in feature_columns:
-        if col not in input_data.columns:
-            input_data[col] = 0
-    
-    input_data = input_data[feature_columns]
-    scaled_data = scaler.transform(input_data)
-    
-    prediction = model.predict(scaled_data)
-    probability = model.predict_proba(scaled_data)[0][1]
+    # Predict
+    prediction = model.predict(scaled_features)
+    probability = model.predict_proba(scaled_features)[0][1]
     
     return {
-        "patient_id": patient_id,
-        "sepsis_prediction": "Positive" if prediction[0] else "Negative",
-        "probability": float(probability)
+        "patient_id": patient_id.patient_id,
+        "prediction": "Positive" if prediction[0] == 1 else "Negative",
+        "probability": float(probability),
+        "features": features.iloc[0].to_dict()
     }
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root():
+    return """
+    <html>
+        <head><title>Sepsis Prediction API</title></head>
+        <body>
+            <h1>Welcome to Sepsis Prediction API</h1>
+            <p>Visit <a href="/docs">/docs</a> for interactive UI.</p>
+        </body>
+    </html>
+    """
