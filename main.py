@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import pandas as pd
@@ -9,6 +9,7 @@ import os
 import webbrowser
 import uvicorn
 import threading
+from typing import List
 
 app = FastAPI()
 
@@ -53,19 +54,19 @@ async def upload_file(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/patient_ids/")
+@app.get("/patient_ids/", response_model=List[str])
 async def get_patient_ids():
     if uploaded_data is None:
         raise HTTPException(status_code=400, detail="Upload a file first")
-    return {"patient_ids": uploaded_data['ID'].tolist()}
+    return uploaded_data['ID'].tolist()
 
-@app.post("/predict/")
-async def predict_sepsis(patient_id: PatientID):
+@app.get("/predict/")
+async def predict_sepsis(patient_id: str = Query(..., description="Select a patient ID from the dropdown")):
     global uploaded_data
     if uploaded_data is None:
         raise HTTPException(status_code=400, detail="Upload a file first")
     
-    patient = uploaded_data[uploaded_data['ID'] == patient_id.patient_id]
+    patient = uploaded_data[uploaded_data['ID'] == patient_id]
     if patient.empty:
         raise HTTPException(status_code=404, detail="Patient not found")
     
@@ -79,7 +80,7 @@ async def predict_sepsis(patient_id: PatientID):
     probability = model.predict_proba(scaled_features)[0][1]
     
     return {
-        "patient_id": patient_id.patient_id,
+        "patient_id": patient_id,
         "prediction": "Positive" if prediction[0] == 1 else "Negative",
         "probability": float(probability),
         "features": features.iloc[0].to_dict()
