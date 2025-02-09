@@ -1,6 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
 import pandas as pd
 import joblib
 import numpy as np
@@ -25,9 +24,6 @@ scaler = joblib.load(SCALER_PATH)
 
 # Store uploaded data globally
 uploaded_data = None
-
-class PatientID(BaseModel):
-    patient_id: str
 
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
@@ -54,13 +50,13 @@ async def upload_file(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/patient_ids/", response_model=List[str])
+@app.get("/patient_ids/")
 async def get_patient_ids():
     if uploaded_data is None:
         raise HTTPException(status_code=400, detail="Upload a file first")
-    return uploaded_data['ID'].tolist()
+    return {"patient_ids": uploaded_data['ID'].tolist()}
 
-@app.get("/predict/")
+@app.post("/predict/")
 async def predict_sepsis(patient_id: str = Query(..., description="Select a patient ID from the dropdown")):
     global uploaded_data
     if uploaded_data is None:
