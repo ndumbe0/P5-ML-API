@@ -1,22 +1,20 @@
-FROM python:3.9-slim
+# Use an official Python runtime as a parent image
+FROM python:3.9-slim-buster
 
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy all necessary files
-COPY . .
+# Copy the project files into the container
+COPY . /app
 
-# Copy training script first
-COPY train_model.py .
-COPY Paitients_Files_Train.csv .
+# Install any dependencies specified in requirements.txt
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-# Install dependencies and train model first
-RUN pip install pandas scikit-learn imbalanced-learn joblib
+# Make port 8000 available to the outside world
+EXPOSE 8000
 
-# Now copy app files
-COPY requirements.txt .
-COPY main.py .
+# Define environment variable
+ENV NAME SepsisApp
 
-# Install remaining dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
+# Run main.py when the container launches
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
