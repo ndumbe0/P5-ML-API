@@ -1,0 +1,25 @@
+{
+  "best_model": "Logistic Regression",
+  "best_params": {
+    "C": 0.01,
+    "penalty": "l2",
+    "solver": "lbfgs"
+  },
+  "accuracy": 0.7166666666666667,
+  "precision": 0.5769230769230769,
+  "recall": 0.7142857142857143,
+  "f1": 0.6382978723404256,
+  "roc_auc": 0.7976190476190477,
+  "feature_count": 9,
+  "feature_columns": [
+    "PRG",
+    "PL",
+    "PR",
+    "SK",
+    "TS",
+    "M11",
+    "BD2",
+    "Age",
+    "Insurance"
+  ]
+}
