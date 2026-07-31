@@ -7,7 +7,9 @@ from fastapi.testclient import TestClient
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from main import app, load_ml_assets
+from main import app, load_ml_assets, API_KEY
+
+TEST_API_KEY = os.getenv("API_KEY", "sk-sepsis-2024-dev-key")
 
 client = TestClient(app)
 
@@ -17,7 +19,7 @@ def setup_models():
 
 @pytest.fixture
 def api_key_header():
-    return {"X-API-Key": "sk-sepsis-2024-dev-key"}
+    return {"X-API-Key": TEST_API_KEY}
 
 @pytest.fixture
 def sample_patient():

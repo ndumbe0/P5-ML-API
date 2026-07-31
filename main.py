@@ -3,12 +3,13 @@ import io
 import json
 import time
 import logging
+from contextlib import asynccontextmanager
 from typing import List, Optional, Dict, Any
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Header, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import pandas as pd
 import joblib
 import numpy as np
@@ -25,11 +26,17 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-API_KEY = os.getenv("API_KEY", "sk-sepsis-2024-dev-key")
+API_KEY = os.getenv("API_KEY", "")
 GOOGLE_AI_API_KEY = os.getenv("GOOGLE_AI_API_KEY", "")
 
 if GEMINI_AVAILABLE and GOOGLE_AI_API_KEY:
     genai.configure(api_key=GOOGLE_AI_API_KEY)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    load_ml_assets()
+    yield
+
 
 app = FastAPI(
     title="Sepsis Prediction API",
@@ -37,11 +44,12 @@ app = FastAPI(
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:8501", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -79,6 +87,8 @@ def load_ml_assets():
 
 
 def verify_api_key(x_api_key: Optional[str] = Header(None)):
+    if not API_KEY:
+        raise HTTPException(status_code=500, detail="API key not configured. Set API_KEY environment variable.")
     if x_api_key is None or x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
     return x_api_key
@@ -95,7 +105,8 @@ class PatientData(BaseModel):
     Age: float = Field(..., ge=0, le=120, description="Age in years")
     Insurance: float = Field(..., ge=0, le=1, description="Insurance (0 or 1)")
 
-    @validator('Insurance')
+    @field_validator('Insurance')
+    @classmethod
     def validate_insurance(cls, v):
         if v not in [0, 1]:
             raise ValueError('Insurance must be 0 or 1')
@@ -120,12 +131,6 @@ class HealthResponse(BaseModel):
     model_loaded: bool
     model_type: Optional[str] = None
     timestamp: str
-
-
-@app.on_event("startup")
-async def startup_event():
-    global model, scaler, expected_features
-    load_ml_assets()
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -164,7 +169,7 @@ async def predict_single(
         raise HTTPException(status_code=500, detail="Model not loaded. Please train the model first.")
 
     try:
-        input_data = pd.DataFrame([patient.dict()])
+        input_data = pd.DataFrame([patient.model_dump()])
         for col in expected_features:
             if col not in input_data.columns:
                 input_data[col] = 0
@@ -178,7 +183,7 @@ async def predict_single(
         explanation = None
         if explain and GEMINI_AVAILABLE and GOOGLE_AI_API_KEY:
             try:
-                explanation = await get_gemini_explanation(patient.dict(), probability, result_label)
+                explanation = await get_gemini_explanation(patient.model_dump(), probability, result_label)
             except Exception as e:
                 logger.warning(f"Gemini explanation failed: {e}")
                 explanation = "Explanation unavailable"
@@ -186,7 +191,7 @@ async def predict_single(
             prediction=result_label,
             probability=round(probability, 4),
             confidence=confidence,
-            features_used=patient.dict(),
+            features_used=patient.model_dump(),
             explanation=explanation
         )
     except Exception as e:

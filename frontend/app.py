@@ -11,11 +11,14 @@ st.set_page_config(
 )
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
-API_KEY = os.getenv("API_KEY", "sk-sepsis-2024-dev-key")
-HEADERS = {"X-API-Key": API_KEY}
+API_KEY = os.getenv("API_KEY", "")
+HEADERS = {"X-API-Key": API_KEY} if API_KEY else {}
 
 st.title("🏥 Sepsis Prediction System")
 st.markdown("Machine learning powered sepsis risk assessment with AI explanations")
+
+if not API_KEY:
+    st.warning("⚠️ API_KEY is not set. Set it in your environment or .env file.")
 
 with st.sidebar:
     st.header("Settings")
