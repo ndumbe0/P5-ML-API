@@ -1,0 +1,14 @@
+dimension,level,patients,positives,avg_age,avg_glucose,avg_bmi,positive_rate
+age_group,26-30,115,39,27.9,121.6,33.5,0.3391
+age_group,31-35,66,33,32.7,124.0,33.4,0.5
+age_group,36-40,62,25,37.7,127.6,32.6,0.4032
+age_group,41-50,81,45,44.0,123.6,34.5,0.5556
+age_group,51+,67,31,58.7,141.3,30.8,0.4627
+age_group,<=25,208,35,22.8,110.6,31.1,0.1683
+bmi_category,Normal,84,4,32.6,107.3,22.8,0.0476
+bmi_category,Obese,362,170,33.7,126.3,36.6,0.4696
+bmi_category,Overweight,140,33,33.3,118.3,27.6,0.2357
+bmi_category,Underweight,4,0,24.0,95.2,18.2,0.0
+bmi_category,Unknown,9,1,26.2,99.6,,0.1111
+has_insurance,0,188,57,,,,0.3032
+has_insurance,1,411,151,,,,0.3674
