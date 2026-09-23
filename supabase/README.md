@@ -131,6 +131,6 @@ CREATE POLICY "Service role can insert predictions" ON predictions
 ```env
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_KEY=your-anon-key
-API_KEY=sk-sepsis-2024-dev-key
+API_KEY=REPLACE_WITH_YOUR_API_KEY
 GOOGLE_AI_API_KEY=your-gemini-key
 ```

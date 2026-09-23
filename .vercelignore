@@ -16,3 +16,5 @@ Dockerfile
 docker-compose.yml
 README.Docker.md
 dashboard/
+.env
+images/

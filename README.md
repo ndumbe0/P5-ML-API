@@ -155,7 +155,7 @@ pytest test_api.py -v --tb=short
 Run tests with `API_KEY` set in your environment:
 
 ```bash
-export API_KEY=sk-sepsis-2024-dev-key
+export API_KEY=REPLACE_WITH_YOUR_API_KEY
 pytest test_api.py -v
 ```
 

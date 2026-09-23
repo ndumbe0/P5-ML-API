@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from main import app, load_ml_assets, API_KEY
 
-TEST_API_KEY = os.getenv("API_KEY", "sk-sepsis-2024-dev-key")
+TEST_API_KEY = os.getenv("API_KEY", "REPLACE_WITH_YOUR_API_KEY")
 
 client = TestClient(app)
 
