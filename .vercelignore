@@ -1,0 +1,18 @@
+# Streamlit UI does not run on Vercel (serverless can't host a persistent
+# WebSocket app). Deploy frontend/ on Streamlit Community Cloud or Render
+# instead, pointing API_URL at this Vercel deployment.
+frontend/
+venv/
+data/
+src/
+supabase/
+tests/
+__pycache__/
+*.ipynb
+model_training.log
+test_api.py
+train_model.py
+Dockerfile
+docker-compose.yml
+README.Docker.md
+dashboard/
