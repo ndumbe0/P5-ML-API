@@ -120,7 +120,7 @@ with tab2:
                     data = resp.json()
                     st.success(f"✅ Predicted {data['count']} patients")
                     results_df = pd.DataFrame(data["results"])
-                    st.dataframe(results_df, use_container_width=True)
+                    st.dataframe(results_df, width="stretch")
                     csv_download = results_df.to_csv(index=False)
                     st.download_button(
                         "Download Results as CSV",
